@@ -64,7 +64,7 @@ const MealsCalendar = () => {
   return (
     <Grid
       sx={{
-        padding: "1% 4% 8% 4%",
+        padding: {md:"1% 4% 8% 4%",xs:"1% 4% 10% 4%"},
         backgroundImage: `url(${image})`,
         backgroundRepeat: "no-repeat",
         backgroundPosition: "top",
@@ -115,7 +115,7 @@ const MealsCalendar = () => {
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
-              width: 400,
+              width: {md:400, xs:200},
               backgroundColor: "#fff299",
               border: "2px solid green",
               padding: "2%",

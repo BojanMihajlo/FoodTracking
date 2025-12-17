@@ -109,7 +109,7 @@ const HomePage = () => {
       </Box>
 
       {/* Yesterday Meals Section */}
-      <Container sx={{ marginTop: "5%" }}>
+      <Container sx={{ marginTop: {md:"5%", xs:"18%"},marginBottom:{md:"1%", xs:"15%"} }}>
         <Box
           sx={{
             display: { md: "flex", sm: "block" },

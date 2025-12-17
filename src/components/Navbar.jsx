@@ -48,7 +48,7 @@ const Navbar = () => {
         </Typography>
 
         {/* MOBILE MENU */}
-        <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
+        <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" }, }}>
           {isEntered && (
             <>
               <IconButton color="inherit" onClick={handleOpenNavMenu}>
@@ -71,7 +71,7 @@ const Navbar = () => {
                           color: "black",
                           fontFamily: "'Salsa', cursive",
                           width: "100%",
-                          "&.active": { textDecoration: "underline" },
+                          "&.active": { color:"#b6e810"  },
                         }}
                       >
                         {page.name}
