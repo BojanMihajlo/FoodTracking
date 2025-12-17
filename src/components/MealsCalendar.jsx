@@ -2,74 +2,97 @@ import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import { Container, Grid, Typography, Modal, Box } from "@mui/material";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import image from "../images/backfood2.webp";
+import { getAuthToken } from "../util/auth";
+
+const API_URL = process.env.REACT_APP_API_URL;
 
 const localizer = momentLocalizer(moment);
 
 const MealsCalendar = () => {
-  const now = new Date();
-  const events = [
-    {
-      id: 7,
-      title: "Lunch",
-      url: "https://familystylefood.com/wp-content/uploads/2022/03/Baked-Chicken-Asparagus.jpg",
-      description: "boiled chicken with asparagus",
-      start: new Date(new Date().setHours(new Date().getHours() - 48)),
-      end: new Date(new Date().setHours(new Date().getHours() - 48)),
-    },
-    {
-      id: 15,
-      title: "Breakfast",
-      url: "https://www.breakfastfordinner.net/wp-content/uploads/2017/01/Avocado-Toast-with-Hardboiled-Eggs-8-of-9-600x900.jpg",
-      description: "boiled eggs with avocado and almonds",
-      start: now,
-      end: now,
-    },
-    {
-      id: 16,
-      title: "Lunch",
-      url: "https://images.fineartamerica.com/images/artworkimages/mediumlarge/1/roast-turkey-with-potatoes-and-bacon-louise-heusinkveld.jpg",
-      description: "roasted turkey with potatoes",
-      start: now,
-      end: now,
-    },
-    {
-      id: 12,
-      title: "Dinner",
-      description: "sushi",
-      url: "https://ik.imagekit.io/awwybhhmo/satellite_images/japanese/beyondmenu/hero/16.jpg?tr=w-3840,q-50",
-      start: new Date(new Date().setHours(new Date().getHours() - 72)),
-      end: new Date(new Date().setHours(new Date().getHours() - 72)),
-    },
-  ];
-  const [meals, setMeals] = useState(events);
+  const [meals, setMeals] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
   const [selectedMeal, setSelectedMeal] = useState(null);
-  const handleSelect = (slotinfo) => {
-    setShowModal(true);
-    setSelectedDate(slotinfo);
-  };
+
+  const token = getAuthToken();
+
+  useEffect(() => {
+    fetch(`${API_URL}/meals`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        setMeals(data);
+      })
+      .catch((err) => console.error(err));
+  }, [token]);
+
+  const events = meals.map((meal) => {
+    
+    const mealId = meal._id || meal.id;
+
+ 
+    const firstItem =
+      meal.mealItemList && meal.mealItemList.length > 0
+        ? meal.mealItemList[0]
+        : null;
+
+    const description = firstItem
+      ? `Name: ${firstItem.name || "-"} | Amount: ${firstItem.amount || "-"}g | Carbs: ${firstItem.carbohydrate || "-"}g | Protein: ${firstItem.protein || "-"}g | Fat: ${firstItem.fat || "-"}g | Calories: ${firstItem.calories || "-"}`
+      : "No meal items";
+
+    
+    const date = meal.date ? moment(meal.date, "DD/MM/YYYY").toDate() : new Date();
+
+    return {
+      id: mealId,
+      title: meal.category || "No category",
+      description,
+      start: date,
+      end: date,
+    };
+  });
 
   const handleSelectMeal = (event) => {
-    setShowModal(true);
     setSelectedMeal(event);
+    setShowModal(true);
   };
 
   return (
-    <Grid sx={{ marginTop: "5%" }}>
-      <Typography variant="h3" sx={{ padding: "1%", fontFamily: "Salsa" }}>
-        All Meals
+    <Grid
+      sx={{
+        padding: "1% 4% 8% 4%",
+        backgroundImage: `url(${image})`,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "top",
+      }}
+    >
+      <Typography
+        sx={{
+          padding: "1%",
+          fontFamily: "Salsa",
+          textShadow: "2px 2px 2px black",
+          color: "white",
+          fontSize: { md: "60px", xs: "30px" },
+          marginTop: { md: "0.5%", xs: "10%" },
+        }}
+      >
+        All Meals Calendar
       </Typography>
+
       <Container
         sx={{
           height: "500px",
           backgroundColor: "#cdf2bb",
           border: "2px solid green",
+          outline: "8px solid green",
         }}
       >
         <Calendar
-          events={meals}
+          events={events}
           startAccessor="start"
           endAccessor="end"
           defaultDate={moment().toDate()}
@@ -78,7 +101,8 @@ const MealsCalendar = () => {
           onSelectEvent={handleSelectMeal}
         />
       </Container>
-      {showModal && (
+
+      {showModal && selectedMeal && (
         <Modal
           open={showModal}
           onClose={() => setShowModal(false)}
@@ -90,8 +114,9 @@ const MealsCalendar = () => {
               position: "absolute",
               top: "50%",
               left: "50%",
-              width: "400",
-              backgroundColor: "lightgreen",
+              transform: "translate(-50%, -50%)",
+              width: 400,
+              backgroundColor: "#fff299",
               border: "2px solid green",
               padding: "2%",
               borderRadius: "8px",
@@ -99,16 +124,19 @@ const MealsCalendar = () => {
           >
             <Typography
               id="modal-modal-title"
-              variant="h4"
+              variant="h6"
               component="h2"
-              sx={{ fontFamily: "Salsa" }}
+              sx={{ fontFamily: "Salsa", color: "green" }}
             >
               {selectedMeal.title}
             </Typography>
-            <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+            <Typography
+              variant="h6"
+              id="modal-modal-description"
+              sx={{ mt: 2, fontFamily: "Salsa" }}
+            >
               {selectedMeal.description}
             </Typography>
-            <img src={selectedMeal.url} width={150} height={150} />
           </Box>
         </Modal>
       )}

@@ -1,75 +1,147 @@
-import { Container, Stack, TextField, Button, Typography } from "@mui/material";
+import { Container, Stack, TextField, Button, Box } from "@mui/material";
 import { useState } from "react";
-import { Form, useLocation } from "react-router-dom";
-import image from "../greenback1.jpg";
+import { useLocation, useNavigate } from "react-router-dom";
+import image from "../images/greenback1.jpg";
+import { getAuthToken } from "../util/auth";
+import NewItems from "./NewItems";
+
+const API_URL = process.env.REACT_APP_API_URL;
+
 
 const PopupMeals = () => {
-  const [foodDescription, setFoodDescription] = useState("");
-  const [drinkDescription, setDrinkDescription] = useState("");
   const location = useLocation();
   const data = location.state;
 
+  const [category, setCategory] = useState(data?.name || "");
+  const [mealItems, setMealItems] = useState([]);
+  const [openNewItems, setOpenNewItems] = useState(false);
+  const navigate = useNavigate();
+
   const getDate = () => {
     const today = new Date();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
-    const date = today.getDate();
-    return `${date}/${month}/${year}`;
+    return `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+  };
+  const [currentDate] = useState(getDate());
+
+  // додавање нов item
+  const handleAddItem = (item) => {
+    setMealItems((prev) => [...prev, item]);
   };
 
-  const [currentDate, setCurrentDate] = useState(getDate());
-
-  const onChangeFoodDescriptionHandler = (event) => {
-    setFoodDescription(event.target.value);
+  // бришење item
+  const handleRemoveItem = (index) => {
+    setMealItems((prev) => prev.filter((_, i) => i !== index));
   };
-  const onChangeDrinkDescriptionHandler = (event) => {
-    setDrinkDescription(event.target.value);
+
+  // SAVE MEAL -> директно fetch до backend
+  const saveMeal = async () => {
+    if (!category || mealItems.length === 0) {
+      alert("Category and at least one item are required!");
+      return;
+    }
+
+    const token = getAuthToken();
+
+    await fetch(`${API_URL}/meals`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        category,
+        date: currentDate,
+        mealItemList: mealItems,
+      }),
+    });
+
+    navigate("/meals");
   };
 
   return (
-    <Container
+    <Box
       sx={{
-        marginTop: "8%",
-        backgroundImage: `url(${image})`,
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
-        padding: "2%",
-        borderRadius: "5px",
+        backgroundColor: "#EAFAC0",
+        minHeight: "91vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        px: { xs: 2, md: 0 },
       }}
     >
-      <Form method="post">
-        <Stack alignItems="center" width="50%" rowGap={5} mt={5}>
-          <Typography variant="h5" sx={{ fontFamily: " Salsa" }}>
-            {data.cat.name}
-          </Typography>
-          <Typography>Date:{currentDate}</Typography>
+      <Container
+        maxWidth="md"
+        sx={{
+          backgroundImage: `url(${image})`,
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          borderRadius: "10px",
+          py: { xs: 4, md: 6 },
+        }}
+      >
+        <Stack rowGap={3} sx={{ width: "100%" }}>
+          {/* CATEGORY */}
+          <TextField
+            fullWidth
+            label="Category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+          />
 
-          <TextField
-            label="Food Description"
-            variant="standard"
-            multiline
-            rows={3}
+          {/* DATE */}
+          <TextField fullWidth value={currentDate} disabled />
+
+          {/* Add Meal Items */}
+          <Button onClick={() => setOpenNewItems(!openNewItems)} sx={{ color: "green" }}>
+            {openNewItems ? "Close New Items" : "Add New Item"}
+          </Button>
+
+          {openNewItems && <NewItems onAddItem={handleAddItem} />}
+
+          {/* Preview of Meal Items */}
+          {mealItems.length > 0 && (
+            <Box sx={{ mt: 2 }}>
+              {mealItems.map((item, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    border: "1px solid #ccc",
+                    p: 1,
+                    mb: 1,
+                    borderRadius: 1,
+                  }}
+                >
+                  <span>
+                    {item.name} - {item.amount}g - {item.calories} kcal
+                  </span>
+                  <Button color="error" onClick={() => handleRemoveItem(index)}>
+                    Remove
+                  </Button>
+                </Box>
+              ))}
+            </Box>
+          )}
+
+          {/* SAVE MEAL */}
+          <Button
             fullWidth
-            value={foodDescription}
-            onChange={onChangeFoodDescriptionHandler}
-            name="foodDescription"
-          />
-          <TextField
-            label="Drink Description"
-            variant="standard"
-            multiline
-            rows={3}
-            fullWidth
-            value={drinkDescription}
-            onChange={onChangeDrinkDescriptionHandler}
-            name="drinkDescription"
-          />
-          <Button variant="contained" type="submit">
-            Save meal
+            variant="contained"
+            sx={{ backgroundColor: "green" }}
+            onClick={saveMeal}
+          >
+            Save Meal
+          </Button>
+
+          <Button onClick={() => navigate(-1)} sx={{ color: "green" }}>
+            Back
           </Button>
         </Stack>
-      </Form>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

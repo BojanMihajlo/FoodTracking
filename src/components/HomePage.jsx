@@ -10,94 +10,106 @@ import {
   CardActions,
   TextField,
   Typography,
+  Autocomplete,
 } from "@mui/material";
 import Footer from "./Footer";
-import image from "../heroback3.png";
-import image1 from "../platefood.jpg";
-import image2 from "../plate1.jpg";
-import image3 from "../apple1.jpg";
-import image4 from "../exercise.jpeg";
-import image5 from "../kiwiback.jpg";
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import HomeMeals from "./HomeMeals";
+import FavoriteMeal from "./FavoriteMeal";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import image from "../images/heroback3.png";
+import image1 from "../images/platefood.jpg";
+import image2 from "../images/plate1.png";
+import image3 from "../images/apple1.jpg";
+import image4 from "../images/exercise.jpeg";
+import image5 from "../images/kiwiback.jpg";
+import { getAuthToken } from "../util/auth";
+
+const API_URL = process.env.REACT_APP_API_URL;
+
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const [file, setFile] = useState();
-  const [description, setDescription] = useState("");
-  const [desc, setDesc] = useState([]);
+  const [meals, setMeals] = useState([]);
 
-  const getFile = (event) => {
-    setFile(URL.createObjectURL(event.target.files[0]));
-  };
-  const deleteFile = () => {
-    setFile();
-    setDesc("");
-  };
-  const descriptionHandler = (event) => {
-    setDescription(event.target.value);
-  };
-  const saveDescription = (text) => {
-    setDesc(...desc, description, text);
+  // Fetch meals from backend
+  useEffect(() => {
+  fetch(`${API_URL}/meals`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getAuthToken()}`,
+    },
+  })
+    .then((res) => res.json())
+    .then((data) => setMeals(data))
+    .catch((err) => console.error(err));
+}, []);
 
-    setDescription("");
-    console.log(desc);
-  };
 
-  const toMealsPage = () => {
-    navigate("meals");
-  };
+  // Prepare meal options for Autocomplete
+  const mealOptions = meals.map((meal) => ({
+    label: meal.mealItemList?.[0]?.name || "No name",
+    _id: meal._id,
+  }));
+
   return (
-    <>
+    <Box sx={{ backgroundColor: "#EAFAC0" }}>
+      {/* Hero Section */}
       <Box
         sx={{
           backgroundImage: `url(${image})`,
           backgroundPosition: "center",
           backgroundSize: "cover",
           backgroundRepeat: "no-repeat",
-          marginTop: "4.2%",
           height: "380px",
+          borderBottomLeftRadius: "100px",
+          borderBottomRightRadius: "100px",
         }}
       >
         <Typography
-          variant="h2"
           sx={{
             color: "whitesmoke",
-            paddingTop: "8%",
-            fontFamily: " Salsa, cursive",
+            fontSize: { md: "60px", xs: "40px" },
+            paddingTop: { md: "8%", xs: "25%" },
+            fontFamily: "Salsa, cursive",
           }}
         >
           Food Tracking
         </Typography>
+
         <Box
           sx={{
             marginTop: "2%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
-          <TextField
-            placeholder="Search Meal..."
-            sx={{
-              backgroundColor: "#c6f7c6",
-              borderStartStartRadius: "5px",
-              borderBottomLeftRadius: "5px",
-            }}
-          />
-          <Button
-            sx={{
-              backgroundColor: "limegreen",
-              padding: "1.05%",
-              color: "black",
-            }}
-          >
-            Search
-          </Button>
+         <Autocomplete
+  disablePortal
+  id="combo-box-demo"
+  options={mealOptions}
+  getOptionLabel={(option) => option.label}
+  onChange={(event, value) => {
+    if (value?._id) {
+      
+      navigate(`/meals/`);
+    }
+  }}
+  sx={{
+    width: { md: 350, xs: 250 },
+    backgroundColor: "#dff7e0",
+    borderRadius: "10px",
+    border: "4px solid green",
+  }}
+  renderInput={(params) => <TextField {...params} label="Search meals" />}
+/>
+
         </Box>
       </Box>
-      <Container
-        sx={{
-          marginTop: "5%",
-        }}
-      >
+
+      {/* Yesterday Meals Section */}
+      <Container sx={{ marginTop: "5%" }}>
         <Box
           sx={{
             display: { md: "flex", sm: "block" },
@@ -105,34 +117,14 @@ const HomePage = () => {
             justifyContent: "space-between",
           }}
         >
-          <Box
-            sx={{
-              border: "5px solid green",
-              borderRadius: "5px",
-              padding: "4%",
-              height: "300px",
-            }}
-          >
-            <Typography variant="h4" sx={{ fontFamily: " Salsa, cursive" }}>
-              Your Meals
-            </Typography>
-
-            <Typography variant="body1">
-              "No meals entered. Head over to the tracker to enter a meal"
-            </Typography>
-            <Button
-              sx={{ backgroundColor: "green", color: "black" }}
-              onClick={toMealsPage}
-            >
-              Enter your daily meal
-            </Button>
-          </Box>
-          <Box>
-            <img src={`${image2}`} />
+          <HomeMeals meals={meals} />
+          <Box sx={{ display: { xs: "none", md: "block" } }}>
+            <img src={image2} alt="decorative plate" />
           </Box>
         </Box>
       </Container>
 
+      {/* Quote Section */}
       <Grid
         sx={{
           backgroundImage: `url(${image5})`,
@@ -147,169 +139,63 @@ const HomePage = () => {
       >
         <Typography
           variant="h5"
-          sx={{ fontFamily: " Salsa", textAlign: "center", paddingTop: "5%" }}
+          sx={{ fontFamily: "Salsa", textAlign: "center", padding: { md: "4%", xs: "12%" } }}
         >
-          "Lorem ipsum dolor sit amet consectetur, corporis animi, odit quidem
-          tenetur?"
+          "Food is our common ground, a universal experience." - James Beard
         </Typography>
       </Grid>
 
-      {/* green section */}
+      {/* Favorite Meal Section */}
+      <FavoriteMeal />
 
+      {/* Cards Section */}
       <Grid
-        sx={{
-          marginBottom: "4%",
-          backgroundColor: "#dff2ee",
-          padding: "6%",
-          borderBottomLeftRadius: "100px",
-          borderBottomRightRadius: "100px",
-        }}
+        container
+        spacing={{ xs: 2, md: 6 }}
+        justifyContent="center"
+        sx={{ padding: { xs: "8% 4%", md: "5%" } }}
       >
-        <Typography
-          variant="h4"
-          sx={{ fontFamily: " Salsa", marginBottom: "3%" }}
-        >
-          Your Favourite Meal
-        </Typography>
-        <Box
-          sx={{
-            display: { md: "flex", sm: "block" },
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Box
-            sx={{ border: "3px solid green", paddingTop: "2%" }}
-            width="380px"
-            height="380px"
-          >
-            <img src={file} width="350px" height="350px" />
-          </Box>
-          <Box sx={{ margin: "8%" }}>
-            <Typography variant="h6" sx={{ fontFamily: " Salsa" }}>
-              {desc}
-            </Typography>
-          </Box>
-          <Box sx={{ flexDirection: "row" }}>
-            <Box>
-              <input type="file" onChange={getFile}></input>
-
-              <Button onClick={deleteFile} sx={{ backgroundColor: "green" }}>
-                Delete
-              </Button>
-            </Box>
-            <Box>
-              <TextField
-                placeholder="Meal description.."
-                onChange={descriptionHandler}
-                value={description}
-                type="text"
-              />
-              <Button onClick={saveDescription}>Save</Button>
-            </Box>
-          </Box>
-        </Box>
+        {[
+          { img: image1, title: "Premium recipes" },
+          { img: image3, title: "Easy Tracking" },
+          { img: image4, title: "Perfect exercises" },
+        ].map((card, idx) => (
+          <Grid item key={idx} xs={12} sm={6} md={4} display="flex" justifyContent="center">
+            <Card elevation={5} sx={{ width: { xs: 280, sm: 300, md: 350 } }}>
+              <CardMedia component="img" height={140} image={card.img} alt={card.title} />
+              <CardHeader title={card.title} sx={{ textAlign: "center" }} />
+              <CardContent>
+                <Typography variant="body2" align="center">
+                  Lorem ipsum dolor sit amet, consectetur adipisicing elit...
+                </Typography>
+              </CardContent>
+              <CardActions sx={{ justifyContent: "center" }}>
+                <Link to="blog" style={{ padding: "4px", textDecoration: "none" }}>
+                  MORE
+                </Link>
+                <Button color="secondary">Share</Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
       </Grid>
 
-      {/* favourite meal section */}
-
-      <Grid
+      <Button
         sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: "5%",
-          padding: "5%",
+          backgroundColor: "green",
+          color: "white",
+          display: "block",
+          margin: "0 auto",
+          mt: { xs: 6, md: 2 },
+          mb: { xs: 4, md: 2 },
         }}
+        onClick={() => navigate("/blog")}
       >
-        <Box
-          item
-          width={350}
-          height={350}
-          sx={{ marginTop: "2%", flexDirection: { xs: "column", md: "row" } }}
-        >
-          <Card elevation={5}>
-            <CardMedia
-              component="img"
-              height={150}
-              image={image1}
-              alt="platefood"
-            />
-            <CardHeader title="Premium recipes" />
-            <CardContent>
-              <Typography variant="body2">
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. A
-                assumenda blanditiis cumque, eaque fuga numquam possimus quas
-                quibusdam quis voluptas? A aliquam assumenda cum fugiat ipsa
-                minus nisi officia voluptates!
-              </Typography>
-            </CardContent>
-            <CardActions>
-              <Button color="secondary">more</Button>
-              <Button color="secondary">Share</Button>
-            </CardActions>
-          </Card>
-        </Box>
-        <Grid
-          item
-          width={350}
-          height={350}
-          sx={{ marginTop: "2%", flexDirection: { xs: "column", md: "row" } }}
-        >
-          <Card elevation={5}>
-            <CardMedia
-              component="img"
-              height={150}
-              image={image3}
-              alt="apple"
-            />
-            <CardHeader title="Easy Tracking" />
-            <CardContent>
-              <Typography variant="body2">
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. A
-                assumenda blanditiis cumque, eaque fuga numquam possimus quas
-                quibusdam quis voluptas? A aliquam assumenda cum fugiat ipsa
-                minus nisi officia voluptates!
-              </Typography>
-            </CardContent>
-            <CardActions>
-              <Button color="secondary">more</Button>
-              <Button color="secondary">Share</Button>
-            </CardActions>
-          </Card>
-        </Grid>
-        <Grid
-          item
-          width={350}
-          height={350}
-          sx={{ marginTop: "2%", flexDirection: { xs: "column", md: "row" } }}
-        >
-          <Card elevation={5}>
-            <CardMedia
-              component="img"
-              height={150}
-              image={image4}
-              alt="platefood"
-            />
-            <CardHeader title="Perfect exercises" />
-            <CardContent>
-              <Typography variant="body2">
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. A
-                assumenda blanditiis cumque, eaque fuga numquam possimus quas
-                quibusdam quis voluptas? A aliquam assumenda cum fugiat ipsa
-                minus nisi officia voluptates!
-              </Typography>
-            </CardContent>
-            <CardActions>
-              <Button color="secondary">more</Button>
-              <Button color="secondary">Share</Button>
-            </CardActions>
-          </Card>
-        </Grid>
-      </Grid>
-      {/* card content section */}
+        More
+      </Button>
+
       <Footer />
-    </>
+    </Box>
   );
 };
 

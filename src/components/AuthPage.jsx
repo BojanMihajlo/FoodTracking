@@ -1,4 +1,4 @@
-import image from "../avo4-back.jpg";
+import image from "../images/avo4-back.jpg";
 import {
   Box,
   Button,
@@ -6,31 +6,31 @@ import {
   Grid,
   Paper,
   Stack,
-  TextField,
   Typography,
 } from "@mui/material";
-import { Form, redirect, useSearchParams, useSubmit } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { keyframes } from "@emotion/react"; 
+
+const pulse = keyframes`
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+`;
 
 const AuthPage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-  const isLogin =
-    !searchParams.get("mode") || searchParams.get("mode") === "login";
-
-  const toggleAuthMode = () => {
-    setSearchParams({
-      mode: isLogin ? "signup" : "login",
-    });
+  const goToHome = () => {
+    localStorage.setItem("isEntered", "true");
+    navigate("/");
   };
+
   return (
     <Box
       display="flex"
-      flexDirection="column"
       justifyContent="center"
       alignItems="center"
-      height="100%"
-      paddingTop="8%"
-      paddingBottom="12%"
+      height="100vh"
       sx={{ backgroundColor: "#f1f7d7" }}
     >
       <Paper
@@ -41,44 +41,58 @@ const AuthPage = () => {
           backgroundRepeat: "no-repeat",
         }}
       >
-        <Box width={{ xs: 200, md: 400 }} borderRadius={5} p={10}>
-          <Form method="post">
-            <Stack alignItems="center" rowGap={3}>
-              <Typography variant="h5" component="div">
-                {isLogin ? "Log in" : "Create new user"}
-              </Typography>
-              <FormControl fullWidth>
-                <TextField label="E-Mail" name="email" />
+        <Box
+          width={{ xs: 240, md: 500 }}
+          height={{ md: 300 }}
+          borderRadius={5}
+          p={6}
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          alignItems="center"
+          textAlign="center"
+        >
+          <Stack spacing={3}>
+            <Typography
+              variant="h3"
+              sx={{ 
+                color: "white", 
+                textShadow: "2px 2px 4px rgba(0,0,0,0.6)" 
+              }}
+            >
+              Welcome
+            </Typography>
+            <Typography
+              sx={{
+                color: "white",
+                textShadow: "1px 1px 3px rgba(0,0,0,0.5)",
+                fontSize: { xs: "16px", md: "18px" }
+              }}
+            >
+              You can now explore meals directly. No login needed.
+            </Typography>
+
+            <Grid container justifyContent="center">
+              <FormControl>
+                <Button
+                  variant="contained"
+                  sx={{ 
+                    backgroundColor: "green", 
+                    px: 4,
+                    mt: 1,
+                    animation: `${pulse} 1.5s infinite`,
+                    transition: "background-color 0.3s ease",
+                    "&:hover": {
+                      backgroundColor: "#2e7d32",
+                    },
+                  }}
+                  onClick={goToHome}
+                >
+                  GO
+                </Button>
               </FormControl>
-              <FormControl fullWidth>
-                <TextField label="Password" type="password" name="password" />
-              </FormControl>
-              <Grid container gap={2} justifyContent="center">
-                <Grid item xs={12} md={6} textAlign="center">
-                  <FormControl>
-                    <Button
-                      variant="contained"
-                      type="submit"
-                      sx={{ backgroundColor: "green" }}
-                    >
-                      Go
-                    </Button>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} md={6} textAlign="center">
-                  <FormControl>
-                    <Button
-                      variant="contained"
-                      onClick={toggleAuthMode}
-                      sx={{ backgroundColor: "green" }}
-                    >
-                      {isLogin ? "Create User" : "Log In"}
-                    </Button>
-                  </FormControl>
-                </Grid>
-              </Grid>
-            </Stack>
-          </Form>
+            </Grid>
+          </Stack>
         </Box>
       </Paper>
     </Box>
@@ -86,3 +100,4 @@ const AuthPage = () => {
 };
 
 export default AuthPage;
+

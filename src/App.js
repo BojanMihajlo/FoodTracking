@@ -1,59 +1,80 @@
-import logo from './logo.svg';
 import './App.css';
-import Navbar from './components/Navbar';
-import { createTheme, styled, ThemeProvider } from "@mui/material";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import RootLayout from './components/RootLayout';
 import AuthPage from './components/AuthPage';
 import HomePage from './components/HomePage';
-import MealsPage from './components/MealsPage';
+import MealsPage, { loader as mealsLoader } from './components/MealsPage';
 import PopupMeals from './components/PopupMeals';
-
 import MealsCalendar from './components/MealsCalendar';
+import BlogPage from './components/BlogPage';
+import ProtectedRoute from "./components/ProtectedRoute";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 
+
+const theme = createTheme({
+  typography: {
+    fontFamily: "Salsa, cursive",
+  },
+});
 
 const router = createBrowserRouter([
-
   {
     path: "/",
     element: <RootLayout />,
     children:[
       {
         path: "auth",
-        element: <AuthPage />,
+        element: <AuthPage />, // нема action
       },
       {
         path: "/",
-        element: <HomePage/>
+        element:  <ProtectedRoute>
+      <HomePage />
+    </ProtectedRoute>,
+        // loader за demo не е потребен
       },
       {
         path:"meals",
-       
         children:[
           {
             index:true,
-            element: <MealsPage/>,
+            element:<ProtectedRoute><MealsPage/></ProtectedRoute> ,
+            id:"mealsId",
+            loader: mealsLoader, // ова е ок ако loader само fetch-ира со DEMO_TOKEN
           },
           {
-            path:"popup",
-            element:<PopupMeals/>
-          }
+            path:"popup", 
+            children:[
+              {
+                index:true,
+                element: <PopupMeals/> , 
+              },
+             
+            ]
+          },
         ]
       },
       {
         path:"calendar",
-        element:<MealsCalendar/>
+        element:<ProtectedRoute><MealsCalendar/></ProtectedRoute>,
+        // loader за demo не е потребен
+      },
+      {
+        path:"blog",
+        element:<ProtectedRoute><BlogPage/></ProtectedRoute>,
+        // loader за demo не е потребен
       }
     ]
-    
   }
-])
+]);
 
 function App() {
   return (
+     <ThemeProvider theme={theme}>
     <div className="App">
-    <RouterProvider router={router}></RouterProvider>
+      <RouterProvider router={router} ></RouterProvider>
     </div>
+    </ThemeProvider>
   );
 }
 
